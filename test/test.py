@@ -173,9 +173,10 @@ async def test_pwm_freq(dut):
     await ClockCycles(dut.clk, 1000)
 
     # Measure frequency: time between two rising edges
-    await RisingEdge(dut.uo_out)
+    sig = dut.uo_out[0]
+    await RisingEdge(sig)
     time1 = cocotb.utils.get_sim_time(units='us')
-    await RisingEdge(dut.uo_out)
+    await RisingEdge(sig)
     time2 = cocotb.utils.get_sim_time(units='us')
     period_us = time2 - time1
     freq = 1e6 / period_us
@@ -207,26 +208,27 @@ async def test_pwm_duty(dut):
     # Test 0% duty cycle
     await send_spi_transaction(dut, 1, 0x04, 0)
     await ClockCycles(dut.clk, 1000)
-    assert dut.uo_out.value == 0, "0% duty: output should be low"
+    assert (int(dut.uo_out.value) & 0x01) == 0, "0% duty: output should be low"
     await ClockCycles(dut.clk, 10000)  # Wait longer
-    assert dut.uo_out.value == 0, "0% duty: output should remain low"
+    assert (int(dut.uo_out.value) & 0x01) == 0, "0% duty: output should remain low"
 
     # Test 100% duty cycle
     await send_spi_transaction(dut, 1, 0x04, 255)
     await ClockCycles(dut.clk, 1000)
-    assert dut.uo_out.value == 1, "100% duty: output should be high"
+    assert (int(dut.uo_out.value) & 0x01) == 1, "100% duty: output should be high"
     await ClockCycles(dut.clk, 10000)  # Wait longer
-    assert dut.uo_out.value == 1, "100% duty: output should remain high"
+    assert (int(dut.uo_out.value) & 0x01) == 1, "100% duty: output should remain high"
 
     # Test 50% duty cycle
     await send_spi_transaction(dut, 1, 0x04, 128)
     await ClockCycles(dut.clk, 1000)
     # Measure duty cycle
-    await RisingEdge(dut.uo_out)
+    sig = dut.uo_out[0]
+    await RisingEdge(sig)
     time_rise = cocotb.utils.get_sim_time(units='us')
-    await FallingEdge(dut.uo_out)
+    await FallingEdge(sig)
     time_fall = cocotb.utils.get_sim_time(units='us')
-    await RisingEdge(dut.uo_out)
+    await RisingEdge(sig)
     time_rise2 = cocotb.utils.get_sim_time(units='us')
     high_time = time_fall - time_rise
     period = time_rise2 - time_rise
