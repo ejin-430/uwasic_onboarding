@@ -7,15 +7,12 @@ from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb.triggers import ClockCycles
 from cocotb.types import Logic
 from cocotb.types import LogicArray
+from cocotb.triggers import Timer
+from cocotb.triggers import with_timeout
 
 async def await_half_sclk(dut):
-    """Wait for the SCLK signal to go high or low."""
-    start_time = cocotb.utils.get_sim_time(units="ns")
-    while True:
-        await ClockCycles(dut.clk, 1)
-        # Wait for half of the SCLK period (10 us)
-        if (start_time + 100*100*0.5) < cocotb.utils.get_sim_time(units="ns"):
-            break
+    # Half of 10us SCLK period = 5us
+    await Timer(5, units="us")
     return
 
 def ui_in_logicarray(ncs, bit, sclk):
@@ -193,9 +190,10 @@ async def test_pwm_freq(dut):
 
     # Measure frequency: time between two rising edges
     sig = dut.pwm_out
-    await RisingEdge(sig)
+    dut._log.info(f"uo_out={int(dut.uo_out.value):08b} pwm_out={int(dut.pwm_out.value)}")
+    await with_timeout(RisingEdge(sig), 5, "ms")
     time1 = cocotb.utils.get_sim_time(units='us')
-    await RisingEdge(sig)
+    await with_timeout(RisingEdge(sig), 5, "ms")
     time2 = cocotb.utils.get_sim_time(units='us')
     period_us = time2 - time1
     freq = 1e6 / period_us
@@ -243,11 +241,11 @@ async def test_pwm_duty(dut):
     await ClockCycles(dut.clk, 1000)
     # Measure duty cycle
     sig = dut.pwm_out
-    await RisingEdge(sig)
+    await with_timeout(RisingEdge(sig), 5, "ms")
     time_rise = cocotb.utils.get_sim_time(units='us')
-    await FallingEdge(sig)
+    await with_timeout(FallingEdge(sig), 5, "ms")
     time_fall = cocotb.utils.get_sim_time(units='us')
-    await RisingEdge(sig)
+    await with_timeout(RisingEdge(sig), 5, "ms")
     time_rise2 = cocotb.utils.get_sim_time(units='us')
     high_time = time_fall - time_rise
     period = time_rise2 - time_rise
