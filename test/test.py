@@ -190,7 +190,6 @@ async def test_pwm_freq(dut):
 
     # Measure frequency: time between two rising edges
     sig = dut.pwm_out
-    dut._log.info(f"uo_out={int(dut.uo_out.value):08b} pwm_out={int(dut.pwm_out.value)}")
     await with_timeout(RisingEdge(sig), 5, "ms")
     time1 = cocotb.utils.get_sim_time(units='us')
     await with_timeout(RisingEdge(sig), 5, "ms")
