@@ -22,6 +22,7 @@ The project can be tested using the provided Cocotb testbench. SPI write transac
 Tests verify:
 - Correct SPI write behavior
 - PWM frequency and duty cycle correctness
+- Correct handling of duty-cycle edge cases (0% always low, 100% always high)
 - Output behavior when PWM is enabled or disabled
 
 ## External hardware
